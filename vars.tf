@@ -30,8 +30,11 @@ variable "environment" {
 
 variable "cognito_callback_urls" {
   type        = list(string)
-  description = "OAuth callback URLs for the website authorization code flow"
-  default     = ["http://localhost:3000/callback"]
+  description = "OAuth callback URLs for the website authorization code flow (include Swagger UI redirect for SpringDoc Authorize)"
+  default = [
+    "http://localhost:3000/callback",
+    "http://localhost:8080/swagger-ui/oauth2-redirect.html",
+  ]
 }
 
 variable "cognito_logout_urls" {
