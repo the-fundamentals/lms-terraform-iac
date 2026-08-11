@@ -46,6 +46,20 @@ module "cognito" {
   dummy_password    = var.cognito_dummy_password
 }
 
-# module "ecs" {
-#   source = "terraform-aws-modules/ecs/aws"
-# }
+module "s3_landing_zone" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = "${var.project_name}-${var.environment}-landing-zone"
+
+  force_destroy = true
+  block_public_acls = false
+}
+
+module "s3_public" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = "${var.project_name}-${var.environment}-public"
+
+  force_destroy = true
+  block_public_acls = false
+}
