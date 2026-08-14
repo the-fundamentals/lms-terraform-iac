@@ -61,5 +61,23 @@ module "s3_public" {
   bucket = "${var.project_name}-${var.environment}-public"
 
   force_destroy = true
-  block_public_acls = false
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+
+  attach_policy = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "arn:aws:s3:::${var.project_name}-${var.environment}-public/*"
+      }
+    ]
+  })
 }
