@@ -22,7 +22,7 @@ module "vpc" {
 
   enable_nat_gateway = false
   enable_vpn_gateway = false
-  create_igw = true
+  create_igw         = true
 
   map_public_ip_on_launch = true
 }
@@ -51,7 +51,7 @@ module "s3_landing_zone" {
 
   bucket = "${var.project_name}-${var.environment}-landing-zone"
 
-  force_destroy = true
+  force_destroy     = true
   block_public_acls = false
 }
 
@@ -80,4 +80,41 @@ module "s3_public" {
       }
     ]
   })
+}
+
+module "database" {
+  source = "./modules/database"
+
+  security_group_ids = [aws_security_group.ec2_security_group.id]
+  subnet_id          = module.vpc.public_subnets[0]
+  environment        = var.environment
+}
+
+resource "aws_security_group" "ec2_security_group" {
+  name   = "database-ec2-sg"
+  vpc_id = module.vpc.vpc_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ec2_security_group_ingress_ssh" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.ec2_security_group.id
+  from_port         = 22
+  to_port           = 22
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ec2_security_group_ingress_postgres" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.ec2_security_group.id
+  from_port         = 5432
+  to_port           = 5432
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+resource "aws_vpc_security_group_egress_rule" "ec2_security_group_egress" {
+  ip_protocol       = "-1"
+  security_group_id = aws_security_group.ec2_security_group.id
+  from_port         = 0
+  to_port           = 0
+  cidr_ipv4         = "0.0.0.0/0"
 }
