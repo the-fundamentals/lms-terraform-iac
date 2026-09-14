@@ -10,6 +10,8 @@ locals {
   ]
 }
 
+#region VPC -------------------------------------------------------------------------------------------
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 6.0"
@@ -26,6 +28,10 @@ module "vpc" {
 
   map_public_ip_on_launch = true
 }
+
+#endregion
+
+#region COGNITO -------------------------------------------------------------------------------------------
 
 resource "random_id" "cognito_domain" {
   byte_length = 4
@@ -45,6 +51,10 @@ module "cognito" {
   dummy_admin_email = var.cognito_dummy_admin_email
   dummy_password    = var.cognito_dummy_password
 }
+
+#endregion
+
+#region S3 -------------------------------------------------------------------------------------------
 
 module "s3_landing_zone" {
   source = "terraform-aws-modules/s3-bucket/aws"
@@ -82,6 +92,10 @@ module "s3_public" {
   })
 }
 
+#endregion -------------------------------------------------------------------------------------------
+
+#region DATABASE -------------------------------------------------------------------------------------------
+
 module "database" {
   source = "./modules/database"
 
@@ -118,3 +132,11 @@ resource "aws_vpc_security_group_egress_rule" "ec2_security_group_egress" {
   to_port           = 0
   cidr_ipv4         = "0.0.0.0/0"
 }
+
+#endregion
+
+#region EventBridge Scheduler -------------------------------------------------------------------------------------------
+
+
+
+#endregion
