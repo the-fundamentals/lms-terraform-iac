@@ -25,7 +25,7 @@ variable "az_count" {
 variable "environment" {
   type        = string
   description = "Environment to deploy in"
-  default     = "dev"
+  default     = "local"
 }
 
 variable "cognito_callback_urls" {
