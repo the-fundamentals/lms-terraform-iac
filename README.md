@@ -13,7 +13,7 @@ mise install
 
 ## Cloud Agent checks
 
-The `lms-core-api` environment install script validates this repo (no AWS credentials):
+This repo’s `.cursor/environment.json` runs the same gates on builds (no AWS credentials):
 
 ```bash
 terraform fmt -check -recursive
@@ -21,4 +21,4 @@ terraform init -backend=false -input=false
 terraform validate
 ```
 
-Build pods check out `random/hotfix` here when `mise.toml` is not on the cloned default branch.
+The `lms-core-api` LMS environment also runs these checks when this repo is checked out as a sibling dependency.

@@ -1,0 +1,5 @@
+{
+  "name": "LMS Terraform IAC (mise, validate)",
+  "user": "ubuntu",
+  "install": "bash /agent/repos/lms-terraform-iac/.cursor/cloud-agent-install.sh"
+}
