@@ -8,6 +8,10 @@ locals {
   public_subnet_cidrs = [
     for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, i)
   ]
+
+  private_subnet_cidrs = [
+    for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, i + var.az_count)
+  ]
 }
 
 #region VPC -------------------------------------------------------------------------------------------
@@ -21,6 +25,7 @@ module "vpc" {
 
   azs            = local.azs
   public_subnets = local.public_subnet_cidrs
+  private_subnets = local.private_subnet_cidrs
 
   enable_nat_gateway = false
   enable_vpn_gateway = false
@@ -59,16 +64,23 @@ module "cognito" {
 module "s3_landing_zone" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket = "${var.project_name}-${var.environment}-landing-zone"
+  bucket = "${var.project_name}-${var.environment}-${var.uniqueness_token}-landing-zone"
 
   force_destroy     = true
   block_public_acls = false
+  cors_rule = [
+    {
+      allowed_methods = ["GET", "PUT", "POST"],
+      allowed_origins = ["http://localhost:3000"],
+      allowed_headers = ["*"]
+    }
+  ]
 }
 
 module "s3_public" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket = "${var.project_name}-${var.environment}-public"
+  bucket = "${var.project_name}-${var.environment}-${var.uniqueness_token}-public"
 
   force_destroy = true
 
@@ -86,58 +98,65 @@ module "s3_public" {
         Effect    = "Allow"
         Principal = "*"
         Action    = "s3:GetObject"
-        Resource  = "arn:aws:s3:::${var.project_name}-${var.environment}-public/*"
+        Resource  = "arn:aws:s3:::${var.project_name}-${var.environment}-${var.uniqueness_token}-public/*"
       }
     ]
   })
+
+  cors_rule = [
+    {
+      allowed_methods = ["GET", "PUT", "POST"],
+      allowed_origins = ["http://localhost:3000"],
+      allowed_headers = ["*"]
+    }
+  ]
 }
 
 #endregion -------------------------------------------------------------------------------------------
 
-#region DATABASE -------------------------------------------------------------------------------------------
-# Disabled temporarily. This needs an ssh key to be created in the VPC
+#region RDS -------------------------------------------------------------------------------------------
 
-# module "database" {
-#   source = "./modules/database"
-#
-#   security_group_ids = [aws_security_group.ec2_security_group.id]
-#   subnet_id          = module.vpc.public_subnets[0]
-#   environment        = var.environment
-# }
-#
-# resource "aws_security_group" "ec2_security_group" {
-#   name   = "database-ec2-sg"
-#   vpc_id = module.vpc.vpc_id
-# }
-#
-# resource "aws_vpc_security_group_ingress_rule" "ec2_security_group_ingress_ssh" {
-#   ip_protocol       = "tcp"
-#   security_group_id = aws_security_group.ec2_security_group.id
-#   from_port         = 22
-#   to_port           = 22
-#   cidr_ipv4         = "0.0.0.0/0"
-# }
-#
-# resource "aws_vpc_security_group_ingress_rule" "ec2_security_group_ingress_postgres" {
-#   ip_protocol       = "tcp"
-#   security_group_id = aws_security_group.ec2_security_group.id
-#   from_port         = 5432
-#   to_port           = 5432
-#   cidr_ipv4         = "0.0.0.0/0"
-# }
-#
-# resource "aws_vpc_security_group_egress_rule" "ec2_security_group_egress" {
-#   ip_protocol       = "-1"
-#   security_group_id = aws_security_group.ec2_security_group.id
-#   from_port         = 0
-#   to_port           = 0
-#   cidr_ipv4         = "0.0.0.0/0"
-# }
+resource "aws_security_group" "rds" {
+  name        = "${var.project_name}-${var.environment}-rds"
+  description = "Postgres access for LMS"
+  vpc_id      = module.vpc.vpc_id
 
-#endregion
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
 
-#region EventBridge Scheduler -------------------------------------------------------------------------------------------
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
+module "db" {
+  source = "terraform-aws-modules/rds/aws"
 
+  identifier = "${var.project_name}-${var.environment}-rds"
+
+  engine               = "postgresql"
+  engine_version       = "18.3-R2"
+  instance_class       = "db.t4g.micro"
+  allocated_storage    = 20
+  storage_type         = "gp3"
+
+  db_name  = "${var.project_name}-${var.environment}-db"
+  username = "admin"
+  port     = "5432"
+
+  password_wo = var.rds_password
+
+  # VPC & Network
+  vpc_security_group_ids = [aws_security_group.rds.id]
+  publicly_accessible    = false
+  subnet_ids             = module.vpc.private_subnets
+}
 
 #endregion

@@ -10,6 +10,12 @@ variable "project_name" {
   default     = "lms"
 }
 
+variable "uniqueness_token" {
+  type        = string
+  description = "A uniqueness token for S3 bucket names"
+  default     = "fundamentals000"
+}
+
 variable "vpc_cidr" {
   type        = string
   description = "CIDR block for the VPC"
@@ -34,6 +40,7 @@ variable "cognito_callback_urls" {
   default = [
     "http://localhost:3000/callback",
     "http://localhost:8080/swagger-ui/oauth2-redirect.html",
+    "http://localhost:3000/sign-in"
   ]
 }
 
@@ -45,19 +52,26 @@ variable "cognito_logout_urls" {
 
 variable "cognito_dummy_user_email" {
   type        = string
-  description = "Email for the bootstrap USER Cognito account"
-  default     = "user@example.com"
+  description = "Email for the bootstrap USER Cognito account. Empty skips create."
+  default     = ""
 }
 
 variable "cognito_dummy_admin_email" {
   type        = string
-  description = "Email for the bootstrap ADMIN Cognito account"
-  default     = "admin@example.com"
+  description = "Email for the bootstrap ADMIN Cognito account. Empty skips create."
+  default     = ""
 }
 
 variable "cognito_dummy_password" {
   type        = string
-  description = "Shared password for dummy Cognito accounts"
-  default     = "123123123"
+  description = "Shared password for dummy Cognito accounts. Empty skips create."
+  default     = ""
+  sensitive   = true
+}
+
+variable "rds_password" {
+  type        = string
+  description = "RDS Database Password"
+  default     = ""
   sensitive   = true
 }

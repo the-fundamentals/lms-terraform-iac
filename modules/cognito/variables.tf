@@ -25,16 +25,19 @@ variable "logout_urls" {
 
 variable "dummy_user_email" {
   type        = string
-  description = "Email/username for the bootstrap USER dummy account"
+  description = "Email/username for the bootstrap USER dummy account. Empty skips create."
+  default     = ""
 }
 
 variable "dummy_admin_email" {
   type        = string
-  description = "Email/username for the bootstrap ADMIN dummy account"
+  description = "Email/username for the bootstrap ADMIN dummy account. Empty skips create."
+  default     = ""
 }
 
 variable "dummy_password" {
   type        = string
-  description = "Shared password for dummy Cognito accounts"
+  description = "Shared password for dummy Cognito accounts. Empty skips create."
+  default     = ""
   sensitive   = true
 }

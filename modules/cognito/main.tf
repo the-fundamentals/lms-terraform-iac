@@ -1,3 +1,9 @@
+locals {
+  # Opt-in bootstrap users: both email and password required, else skip create.
+  create_dummy_user  = var.dummy_user_email != "" && var.dummy_password != ""
+  create_dummy_admin = var.dummy_admin_email != "" && var.dummy_password != ""
+}
+
 resource "aws_cognito_user_pool" "this" {
   name = var.user_pool_name
 
@@ -72,6 +78,8 @@ resource "aws_cognito_user_group" "admin" {
 }
 
 resource "aws_cognito_user" "dummy_user" {
+  count = local.create_dummy_user ? 1 : 0
+
   user_pool_id = aws_cognito_user_pool.this.id
   username     = var.dummy_user_email
 
@@ -87,6 +95,8 @@ resource "aws_cognito_user" "dummy_user" {
 }
 
 resource "aws_cognito_user" "dummy_admin" {
+  count = local.create_dummy_admin ? 1 : 0
+
   user_pool_id = aws_cognito_user_pool.this.id
   username     = var.dummy_admin_email
 
@@ -102,13 +112,17 @@ resource "aws_cognito_user" "dummy_admin" {
 }
 
 resource "aws_cognito_user_in_group" "dummy_user" {
+  count = local.create_dummy_user ? 1 : 0
+
   user_pool_id = aws_cognito_user_pool.this.id
   group_name   = aws_cognito_user_group.user.name
-  username     = aws_cognito_user.dummy_user.username
+  username     = aws_cognito_user.dummy_user[0].username
 }
 
 resource "aws_cognito_user_in_group" "dummy_admin" {
+  count = local.create_dummy_admin ? 1 : 0
+
   user_pool_id = aws_cognito_user_pool.this.id
   group_name   = aws_cognito_user_group.admin.name
-  username     = aws_cognito_user.dummy_admin.username
+  username     = aws_cognito_user.dummy_admin[0].username
 }

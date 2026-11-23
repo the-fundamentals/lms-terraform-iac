@@ -24,18 +24,18 @@ output "hosted_ui_domain" {
 }
 
 output "dummy_user_email" {
-  description = "Dummy USER account email"
-  value       = aws_cognito_user.dummy_user.username
+  description = "Dummy USER account email (null when not created)"
+  value       = local.create_dummy_user ? aws_cognito_user.dummy_user[0].username : null
 }
 
 output "dummy_admin_email" {
-  description = "Dummy ADMIN account email"
-  value       = aws_cognito_user.dummy_admin.username
+  description = "Dummy ADMIN account email (null when not created)"
+  value       = local.create_dummy_admin ? aws_cognito_user.dummy_admin[0].username : null
 }
 
 output "dummy_password" {
-  description = "Shared password for dummy accounts"
-  value       = var.dummy_password
+  description = "Shared password for dummy accounts (null when none created)"
+  value       = local.create_dummy_user || local.create_dummy_admin ? var.dummy_password : null
   sensitive   = true
 }
 
