@@ -1,0 +1,6 @@
+pre-commit:
+  parallel: false
+  commands:
+    betterleaks:
+      priority: 1
+      run: betterleaks git --pre-commit --staged --redact -v

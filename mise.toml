@@ -3,8 +3,8 @@ pipx = "latest"
 "pipx:terraform-local" = "latest"
 python = "3.14"
 terraform = "latest"
-pre-commit = "latest"
 betterleaks = "1.10.1"
+lefthook = "latest"
 
 [hooks]
-postinstall = "pre-commit install && echo '✅ pre-commit hook installed (betterleaks secret scan active)'"
+postinstall = "lefthook install"
