@@ -72,6 +72,6 @@ variable "cognito_dummy_password" {
 variable "rds_password" {
   type        = string
   description = "RDS Database Password"
-  default     = ""
   sensitive   = true
+  nullable    = false
 }

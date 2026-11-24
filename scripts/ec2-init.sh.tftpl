@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euxo pipefail
+
+dnf install -y temurin-25-jre-headless nginx postgresql17
+
+# Create a new `lms` user and assign its home to `/opt/lms`
+useradd --system --home /opt/lms --shell /sbin/nologin lms
+mkdir -p /opt/lms
+chown lms:lms /opt/lms
+
+# Non-secret environment variables
+cat >/etc/lms.env <<'ENV'
+SPRING_PROFILES_ACTIVE=dev
+SERVER_PORT=8080
+AWS_REGION=us-east-1
+ENV
+chmod 600 /etc/lms.env
+
+# systemd unit
+
+cat >/etc/systemd/system/lms.service <<'UNIT'
+[Unit]
+Description=LMS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=lms
+EnvironmentFile=/etc/lms.env
+ExecStart=/usr/bin/java -Xmx768m -jar /opt/lms/app.jar
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+UNIT
